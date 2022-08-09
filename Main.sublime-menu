@@ -16,7 +16,7 @@
                             {
                                 "caption": "Settings – Default",
                                 "command": "open_file",
-                                "args": {"file": "${packages}/Vale/Vale.sublime-settings"}
+                                "args": {"file": "${packages}/Vale.sublime-settings"}
                             },
                             {
                                 "caption": "Settings – User",

@@ -6,8 +6,9 @@ import webbrowser
 import sublime
 import sublime_plugin
 
-Settings = None
+from Default.paragraph import expand_to_paragraph
 
+Settings = None
 
 def debug(message, prefix='Vale', level='debug'):
     """Print a formatted console entry to the Sublime Text console.
@@ -234,7 +235,6 @@ class ValeEditStylesCommand(sublime_plugin.WindowCommand):
             os.path.join(d, rules[i]))
         self.window.show_quick_panel(rules, open_rule)
 
-
 class ValeCommand(sublime_plugin.TextCommand):
     """Manages Vale's linting functionality.
     """
@@ -242,36 +242,49 @@ class ValeCommand(sublime_plugin.TextCommand):
         syntax = self.view.settings().get('syntax')
         return Settings.is_supported(syntax)
 
-    def run(self, edit):
-        """Run vale on the user-indicated buffer.
-        """
+    def run(self, edit, from_load):
+        #added vale_threshold limiting from SubVale implementation
         path = self.view.file_name()
-
-        if not Settings.vale_exists():
-            debug('binary not found!')
+        if not path or self.view.is_scratch():
+            debug("invalid path: {0}!".format(path))
             return
-        elif not path or self.view.is_scratch():
-            debug('invalid path: {0}!'.format(path))
-            return
+        
+        limit = Settings.get("vale_threshold")
+        count = self.view.rowcol(self.view.size())[0] + 1
 
-        debug('running vale on {0}'.format(self.view.settings().get('syntax')))
         cmd = [Settings.get('vale_binary'), '--output=JSON']
-        buf = self.view.substr(sublime.Region(0, self.view.size()))
+
+        reg = expand_to_paragraph(self.view, self.view.sel()[0].b)
+
+        if limit < 0 or (limit > 0 and count >= limit):
+            buf = self.view.substr(reg)
+        else:
+            buf = self.view.substr(sublime.Region(0, self.view.size()))
+
+        row, _ = self.view.rowcol(reg.a)
+
         output, error = run_on_buf(cmd, buf, path)
         if error:
             debug(error)
             return
 
-        self.show_alerts(output)
+        if limit < 0 or (limit > 0 and count >= limit):
+            if from_load:
+                return
+            _, ext = os.path.splitext(path)
 
-    def show_alerts(self, data):
+            self.show_alerts(output, row)
+        else:
+            self.show_alerts(output, 0)
+
+    def show_alerts(self, data, offset):
         """Add alert regions to the view.
         """
         Settings.clear_on_hover()
         regions = []
         for f, alerts in data.items():
             for a in alerts:
-                start = self.view.text_point(a['Line'] - 1, 0)
+                start = self.view.text_point((a["Line"] - 1) + offset, 0)
                 loc = (start + a['Span'][0] - 1, start + a['Span'][1])
                 regions.append(sublime.Region(*loc))
                 Settings.on_hover.append({
@@ -310,7 +323,6 @@ class ValeCommand(sublime_plugin.TextCommand):
             CSS=Settings.css, header=title, body=body, source=source)
         return content
 
-
 class ValeEventListener(sublime_plugin.EventListener):
     """Monitors events related to Vale.
     """
@@ -320,19 +332,19 @@ class ValeEventListener(sublime_plugin.EventListener):
 
     def on_modified_async(self, view):
         Settings.clear_on_hover()
-        if Settings.get('vale_mode') == 'background':
-            debug('running vale on modified')
-            view.run_command('vale')
+        if Settings.get("vale_mode") == "background":
+            debug("running vale on modified")
+            view.run_command("vale", {"from_load": False})
 
-    def on_activated_async(self, view):
-        if Settings.get('vale_mode') == 'load_and_save':
-            debug('running vale on activated')
-            view.run_command('vale')
+    def on_load_async(self, view):
+        if Settings.get("vale_mode") == "load_and_save":
+            debug("running vale on activated")
+            view.run_command("vale", {"from_load": True})
 
     def on_pre_save_async(self, view):
-        if Settings.get('vale_mode') in ('load_and_save', 'save'):
-            debug('running vale on pre save')
-            view.run_command('vale')
+        if Settings.get("vale_mode") in ("load_and_save", "save"):
+            debug("running vale on pre save")
+            view.run_command("vale", {"from_load": False})
 
     def on_hover(self, view, point, hover_zone):
         loc = Settings.get('vale_alert_location')
@@ -347,7 +359,6 @@ class ValeEventListener(sublime_plugin.EventListener):
                 elif loc == 'hover_status_bar':
                     sublime.status_message(
                         'vale:{0}:{1}'.format(alert['level'], alert['msg']))
-
 
 def plugin_loaded():
     """Load plugin settings and resources.
