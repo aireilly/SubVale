@@ -255,7 +255,7 @@ class ValeCommand(sublime_plugin.TextCommand):
         output, error = run_on_buf(cmd, buf, path)
         row, _ = self.view.rowcol(reg.a)
 
-        if limit < 0 or (limit > 0 and count >= limit):
+        if limit <= 0 or (limit >= 0 and count >= limit):
             if from_load:
                 return
             _, ext = os.path.splitext(path)

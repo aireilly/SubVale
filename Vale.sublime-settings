@@ -3,7 +3,7 @@
     // just work out-of-the-box. Otherwise, you can set the full path, which
     // would look something like this:
     //    "binary": "C:/Projects/Go/bin/vale.exe"
-    "vale_binary": "vale",
+    "vale_binary": "/usr/local/bin/vale",
 
     // This controls how alerts are presented:
     //   1. "hover_status_bar": on hover, show an alert's severity and message
@@ -17,20 +17,27 @@
     //   2. "stippled_underline": draw a stippled underline below the regions.
     //   3. "squiggly_underline": draw a squiggly underline below the regions.
     //   4. "outlined": draw an underline around the regions.
-    "vale_alert_style": "outlined",
+    "vale_alert_style": "squiggly_underline",
 
     // Scope used to determine the color of `alert_style`.
     "vale_highlight_scope": "invalid",
 
     // The path to an icon that will be drawn in the gutter next to each alert.
-    "vale_icon": "",
+    "vale_icon": "circle",
 
     // Lint mode:
     //   1. "background": whenever text is modified.
     //   2. "load_and_save": only when a file is loaded or saved.
     //   3. "save": only when a file is saved.
     //   4. "manual": only when requested.
-    "vale_mode": "load_and_save",
+    "vale_mode": "save",
+
+    // Only lint the active portion of a document
+    // (as determined by the cursor position), allowing for efficient
+    // on-the-fly linting of large documents. There are three supported
+    // values: -1 (applies to all files), 0 (disabled), n (applies to
+    // any file with lines >= n).
+    "vale_threshold": -1,
 
     // A list of syntaxes to run Vale on.
     "vale_syntaxes": [
@@ -55,5 +62,5 @@
     "vale_error_template": "Packages/Vale/static/error.html",
     "vale_css": "Packages/Vale/static/ui.css",
 
-    "vale_debug": false,
+    "vale_debug": true,
 }

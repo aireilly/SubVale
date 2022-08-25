@@ -2,6 +2,11 @@
 
 A **Sublime Text 4** package for [Vale][Vale-home], the customizable linter for prose.
 
+## HACK
+
+* Zip the contents of the SubVale folder > Vale.sublime-package and mv to ~/.config/sublime-text/Installed Packages/
+* Put settings in ~/.config/sublime-text/Packages/User/Vale.sublime-settings
+
 ### Interactive Linting
 
 ![Preview image][preview-img]
