@@ -255,7 +255,12 @@ class ValeCommand(sublime_plugin.TextCommand):
         cmd = [Settings.get('vale_binary'), '--output=JSON']
 
         reg = expand_to_paragraph(self.view, self.view.sel()[0].b)
-        buf = self.view.substr(reg)
+
+        if limit < 0 or (limit > 0 and count >= limit):
+            buf = self.view.substr(reg)
+        else:
+            buf = self.view.substr(sublime.Region(0, self.view.size()))
+
         row, _ = self.view.rowcol(reg.a)
 
         output, error = run_on_buf(cmd, buf, path)
@@ -263,7 +268,7 @@ class ValeCommand(sublime_plugin.TextCommand):
             debug(error)
             return
 
-        if limit < 0 or (limit > 0 and count > limit):
+        if limit < 0 or (limit > 0 and count >= limit):
             if from_load:
                 return
             _, ext = os.path.splitext(path)
@@ -362,6 +367,3 @@ def plugin_loaded():
     Settings = ValeSettings()
     if not Settings.vale_exists():
         sublime.error_message(Settings.no_vale_err)
-
-
-
