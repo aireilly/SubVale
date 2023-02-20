@@ -126,7 +126,7 @@ class ValeSettings(object):
         """
         if not self.vale_exists():
             return {}
-        command = [self.get('vale_binary'), 'dump-config']
+        command = [self.get('vale_binary'), 'ls-config']
         output, error = pipe_through_prog(command, path)
         return json.loads(output)
 
