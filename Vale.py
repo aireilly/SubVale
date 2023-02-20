@@ -28,13 +28,11 @@ def debug(message, prefix='Vale', level='debug'):
             level=level
         ))
 
-
 def make_link(url, linkText='{url}'):
     """Return a link HTML string.
     """
     template = '<a href={url}>' + linkText + '</a>'
     return template.format(url=url)
-
 
 def pipe_through_prog(cmd, path=None, stdin=''):
     """Run the Vale binary with the given command.
@@ -50,7 +48,6 @@ def pipe_through_prog(cmd, path=None, stdin=''):
     out, err = p.communicate(input=stdin.encode('utf-8'))
     return out.decode('utf-8'), err
 
-
 def run_on_buf(cmd, content, filename):
     """Pass the current buffer's content to Vale.
     """
@@ -61,7 +58,6 @@ def run_on_buf(cmd, content, filename):
         return json.loads(output), error
     except ValueError as e:
         return None, str(e)
-
 
 class ValeSettings(object):
     """Provide global access to and management of Vale's settings.
@@ -103,10 +99,10 @@ class ValeSettings(object):
         return os.path.exists(self.get('vale_binary'))
 
     def get_styles(self):
-        """Get Vale's configured styles.
+        """Get Vale's base styles.
         """
         config = self.get_config()
-        return config['SBaseStyles']
+        return config['GBaseStyles']
 
     def get_draw_style(self):
         """Get the region styling.
@@ -169,35 +165,6 @@ class ValeSettings(object):
         self.info_template = sublime.load_resource(
             self.settings.get('vale_info_template'))
         self.css = sublime.load_resource(self.settings.get('vale_css'))
-
-
-class ValeInsertTemplateCommand(sublime_plugin.TextCommand):
-    """Retrieve and insert a template based on the given extension point.
-    """
-    def run(self, edit, **args):
-        point = args['point']
-        temp = pipe_through_prog([Settings.get('vale_binary'), 'new', point])
-        v = self.view.window().new_file()
-        v.insert(edit, 0, temp[0])
-
-
-class ValeNewRuleCommand(sublime_plugin.WindowCommand):
-    """Shows a list of extension points and inserts the associated template.
-    """
-    extension_points = [
-        'conditional', 'consistency', 'existence', 'occurrence',
-        'repetition', 'substitution'
-    ]
-
-    def run(self):
-        self.window.show_quick_panel(self.extension_points, self.choose)
-
-    def choose(self, idx):
-        if idx == -1:
-            return  # The panel was cancelled.
-        self.window.run_command("vale_insert_template", {
-            'point': self.extension_points[idx]
-        })
 
 class ValeCommand(sublime_plugin.TextCommand):
     """Manages Vale's linting functionality.
