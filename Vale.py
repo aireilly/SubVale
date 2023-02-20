@@ -103,10 +103,10 @@ class ValeSettings(object):
         return os.path.exists(self.get('vale_binary'))
 
     def get_styles(self):
-        """Get Vale's base styles.
+        """Get Vale's configured styles.
         """
         config = self.get_config()
-        return config['GBaseStyles']
+        return config['SBaseStyles']
 
     def get_draw_style(self):
         """Get the region styling.
@@ -198,42 +198,6 @@ class ValeNewRuleCommand(sublime_plugin.WindowCommand):
         self.window.run_command("vale_insert_template", {
             'point': self.extension_points[idx]
         })
-
-
-class ValeEditStylesCommand(sublime_plugin.WindowCommand):
-    """Provides quick access to styles on a view-specific basis.
-    """
-    styles = []
-
-    def run(self):
-        """Show a list of all styles applied to the active view.
-        """
-        styles_dir = os.path.dirname(self.window.active_view().file_name())
-        config = Settings.get_config(path=styles_dir)
-        path = config['StylesPath']
-        if not path or not os.path.exists(path):
-            debug('invalid path!')
-            return
-
-        styles = []
-        for s in os.listdir(path):
-            style = os.path.join(path, s)
-            if not os.path.isdir(style):
-                continue
-            self.styles.append(style)
-            styles.append(s)
-        self.window.show_quick_panel(styles, self.choose_rule)
-
-    def choose_rule(self, idx):
-        """Show a list of all rules in the user-selected style.
-        """
-        if idx == -1:
-            return  # The panel was cancelled.
-        d = self.styles[idx]
-        rules = [x for x in os.listdir(d) if x.endswith('.yml')]
-        open_rule = lambda i: None if i == -1 else self.window.open_file(
-            os.path.join(d, rules[i]))
-        self.window.show_quick_panel(rules, open_rule)
 
 class ValeCommand(sublime_plugin.TextCommand):
     """Manages Vale's linting functionality.
